@@ -1,0 +1,32 @@
+name: CICD
+
+on:
+  push:
+    branches:
+      - main  # Deploy when changes are pushed to the main branch
+
+jobs:
+ build: 
+   runs-on: [ubuntu-latest]
+   steps:
+     -name: Checkout source
+      uses: actions/checkout
+    -name: Login to docker hub
+      uses: docker login -u ${{ secrets.DOCKER_USERNAME}} -p ${{secret.DOCKER_PASSWORD}}
+    -name: Build docker image
+      uses: docker build -t integrationninjas/nodejs-app .
+    -name: Public images to docker hub
+      uses: docker push integrationninjas/nodejs-app:latest
+
+  deploy:
+  needs: build
+    runs-on: [aws-ec2]
+
+    steps:
+    - name: pull images from docker
+      run: docker pull integrationinjas/nodejs-app-latest
+      
+    - name: delete old container
+      run: docker rm -f nodejs-app-container
+    - name: Run docker container
+      run: docker run -d -p 3000:3000 -name nodejs-app-container integrationninjas/nodejs-app
